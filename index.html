@@ -203,9 +203,17 @@
         // Función para cargar un video
         function loadVideo(index) {
             const video = videos[index];
-            videoSource.src = video.src;
+            videoSource.src = encodeURI(video.src);
             videoPlayer.load();
-            videoPlayer.play();
+            
+            // Intentar reproducir el video con manejo de errores
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Autoplay prevented:", error);
+                    // El usuario necesitará hacer clic en play manualmente
+                });
+            }
             
             currentTitle.textContent = video.title;
             currentDescription.textContent = video.description;
@@ -243,9 +251,22 @@
             loadVideo(nextIndex);
         });
 
-        // Cargar el primer video automáticamente
+        // Manejar errores de carga de video
+        videoPlayer.addEventListener('error', (e) => {
+            console.error('Error loading video:', e);
+            currentTitle.textContent = 'Error al cargar el video';
+            currentDescription.textContent = 'Por favor, intenta con otro video';
+        });
+
+        // Cargar el primer video (sin auto-reproducir)
         if (videos.length > 0) {
-            loadVideo(0);
+            const video = videos[0];
+            videoSource.src = encodeURI(video.src);
+            videoPlayer.load();
+            currentTitle.textContent = video.title;
+            currentDescription.textContent = video.description + ' - Haz clic en play para comenzar';
+            currentVideoIndex = 0;
+            document.querySelector('.video-item').classList.add('active');
         }
     </script>
 </body>
