@@ -162,7 +162,9 @@
             playBtn.textContent = '▶ Reproducir';
             playBtn.onclick = () => {
                 if (video.paused) {
-                    video.play();
+                    video.play().catch(err => {
+                        console.warn('Playback failed:', err);
+                    });
                     playBtn.textContent = '⏸ Pausar';
                 } else {
                     video.pause();
@@ -174,7 +176,9 @@
             restartBtn.textContent = '⟲ Reiniciar';
             restartBtn.onclick = () => {
                 video.currentTime = 0;
-                video.play();
+                video.play().catch(err => {
+                    console.warn('Playback failed:', err);
+                });
                 playBtn.textContent = '⏸ Pausar';
             };
 
@@ -201,22 +205,6 @@
 
             videoGrid.appendChild(videoCard);
         });
-
-        // Función para reproducir todos los videos
-        function playAllVideos() {
-            videos.forEach((_, index) => {
-                const video = document.getElementById(`video-${index}`);
-                video.play();
-            });
-        }
-
-        // Función para pausar todos los videos
-        function pauseAllVideos() {
-            videos.forEach((_, index) => {
-                const video = document.getElementById(`video-${index}`);
-                video.pause();
-            });
-        }
 
         console.log(`${videos.length} videos cargados correctamente`);
     </script>

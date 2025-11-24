@@ -32,7 +32,7 @@ A simple single-page web application for playing videos.
 
 To add new videos:
 1. Place your `.mp4` files in the `videos/` folder
-2. Update the video list in `index.html` (around line 136)
+2. Update the video list in `index.html` (around line 125)
 3. Refresh the page
 
 ## 📱 Responsive Design
