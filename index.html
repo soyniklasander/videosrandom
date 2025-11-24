@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor de Videos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            background: #000;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 600px;
+        }
+
+        .video-list {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .video-list h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .video-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .video-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+
+        .video-item.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .video-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .video-item p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .play-icon {
+            display: inline-block;
+            margin-right: 10px;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .current-playing {
+            padding: 20px 30px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .current-playing h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .current-playing p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .share-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .share-button:hover {
+            background: #5568d3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-button:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        .share-section {
+            margin-bottom: 20px;
+        }
+
+        .share-section h4 {
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .share-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+            color: #333;
+            resize: vertical;
+        }
+
+        .copy-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: #218838;
+        }
+
+        .copy-button.copied {
+            background: #5cb85c;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            video {
+                max-height: 400px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Reproductor de Videos</h1>
+    
+    <div class="container">
+        <div class="current-playing">
+            <h3 id="currentTitle">Selecciona un video para reproducir</h3>
+            <p id="currentDescription">Haz clic en cualquier video de la lista</p>
+        </div>
+        
+        <div class="video-player">
+            <video id="videoPlayer" controls>
+                <source id="videoSource" src="" type="video/mp4">
+                Tu navegador no soporta el elemento de video.
+            </video>
+        </div>
+        
+        <div class="video-list">
+            <h2>📋 Lista de Videos</h2>
+            <div class="video-grid" id="videoGrid">
+                <!-- Videos will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para compartir -->
+    <div id="shareModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">🔗 Compartir Video</h3>
+                <button class="close-button" id="closeModal" aria-label="Cerrar modal">&times;</button>
+            </div>
+            
+            <div class="share-section">
+                <h4>📎 Link Directo</h4>
+                <input type="text" class="share-input" id="directLink" readonly>
+                <button class="copy-button" onclick="copyToClipboard('directLink', this)">📋 Copiar Link</button>
+            </div>
+
+            <div class="share-section">
+                <h4>🔗 Hipervínculo HTML</h4>
+                <textarea class="share-input" id="htmlLink" rows="3" readonly></textarea>
+                <button class="copy-button" onclick="copyToClipboard('htmlLink', this)">📋 Copiar HTML</button>
+            </div>
+
+            <div class="share-section">
+                <h4>📺 Código de Inserción (Embed)</h4>
+                <textarea class="share-input" id="embedCode" rows="5" readonly></textarea>
+                <button class="copy-button" onclick="copyToClipboard('embedCode', this)">📋 Copiar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista de videos disponibles
+        const videos = [
+            {
+                id: 1,
+                title: 'VIDEO BH1',
+                src: 'videos/VIDEO BH1.mp4',
+                description: 'Video horizontal 1'
+            },
+            {
+                id: 2,
+                title: 'VIDEO BH2',
+                src: 'videos/VIDEO BH2.mp4',
+                description: 'Video horizontal 2'
+            },
+            {
+                id: 3,
+                title: 'VIDEO BV1',
+                src: 'videos/VIDEO BV1.mp4',
+                description: 'Video vertical 1'
+            },
+            {
+                id: 4,
+                title: 'VIDEO BV2',
+                src: 'videos/VIDEO BV2.mp4',
+                description: 'Video vertical 2'
+            }
+        ];
+
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoSource = document.getElementById('videoSource');
+        const videoGrid = document.getElementById('videoGrid');
+        const currentTitle = document.getElementById('currentTitle');
+        const currentDescription = document.getElementById('currentDescription');
+
+        let currentVideoIndex = -1;
+
+        // Función para cargar un video
+        function loadVideo(index) {
+            const video = videos[index];
+            videoSource.src = encodeURI(video.src);
+            videoPlayer.load();
+            
+            // Intentar reproducir el video con manejo de errores
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Autoplay prevented:", error);
+                    // El usuario necesitará hacer clic en play manualmente
+                });
+            }
+            
+            currentTitle.textContent = video.title;
+            currentDescription.textContent = video.description;
+            currentVideoIndex = index;
+
+            // Actualizar estilos de items activos
+            document.querySelectorAll('.video-item').forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // Función para abrir modal de compartir
+        function openShareModal(index) {
+            const video = videos[index];
+            // Construcción más robusta de la URL base
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            const videoUrl = baseUrl + video.src;
+            
+            // Link directo
+            document.getElementById('directLink').value = videoUrl;
+            
+            // Hipervínculo HTML
+            document.getElementById('htmlLink').value = 
+                `<a href="${videoUrl}" target="_blank">${video.title}</a>`;
+            
+            // Código de inserción (embed)
+            document.getElementById('embedCode').value = 
+                `<video width="640" height="360" controls>\n` +
+                `  <source src="${videoUrl}" type="video/mp4">\n` +
+                `  Tu navegador no soporta el elemento de video.\n` +
+                `</video>`;
+            
+            const modal = document.getElementById('shareModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        // Función para cerrar modal
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Función para copiar al portapapeles
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            element.select();
+            element.setSelectionRange(0, element.value.length);
+            
+            // Usar Clipboard API con fallback
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(element.value).then(() => {
+                    showCopySuccess(button);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    // Intentar fallback
+                    fallbackCopy(element, button);
+                });
+            } else {
+                // Fallback para navegadores antiguos
+                fallbackCopy(element, button);
+            }
+        }
+
+        // Función de fallback para copiar usando execCommand
+        function fallbackCopy(element, button) {
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(button);
+                } else {
+                    alert('No se pudo copiar al portapapeles');
+                }
+            } catch (err) {
+                console.error('Error en fallback copy:', err);
+                alert('No se pudo copiar al portapapeles');
+            }
+        }
+
+        // Función para mostrar éxito al copiar
+        function showCopySuccess(button) {
+            const originalText = button.textContent;
+            button.textContent = '✓ Copiado!';
+            button.classList.add('copied');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }
+
+        // Crear elementos de la lista de videos
+        videos.forEach((video, index) => {
+            const videoItem = document.createElement('div');
+            videoItem.className = 'video-item';
+            videoItem.innerHTML = `
+                <h3><span class="play-icon">▶</span>${video.title}</h3>
+                <p>${video.description}</p>
+                <button class="share-button" onclick="event.stopPropagation(); openShareModal(${index})">🔗 Compartir</button>
+            `;
+            
+            videoItem.addEventListener('click', (e) => {
+                // Solo cargar video si no se hizo clic en el botón de compartir
+                if (!e.target.classList.contains('share-button')) {
+                    loadVideo(index);
+                }
+            });
+            
+            videoGrid.appendChild(videoItem);
+        });
+
+        // Event listeners para el modal
+        document.getElementById('closeModal').addEventListener('click', closeShareModal);
+        document.getElementById('shareModal').addEventListener('click', (e) => {
+            if (e.target.id === 'shareModal') {
+                closeShareModal();
+            }
+        });
+
+        // Auto-reproducir siguiente video cuando termine el actual
+        videoPlayer.addEventListener('ended', () => {
+            const nextIndex = (currentVideoIndex + 1) % videos.length;
+            loadVideo(nextIndex);
+        });
+
+        // Manejar errores de carga de video
+        videoPlayer.addEventListener('error', (e) => {
+            console.error('Error loading video:', e);
+            currentTitle.textContent = 'Error al cargar el video';
+            currentDescription.textContent = 'Por favor, intenta con otro video';
+        });
+
+        // Cargar el primer video (sin auto-reproducir)
+        if (videos.length > 0) {
+            const video = videos[0];
+            videoSource.src = encodeURI(video.src);
+            videoPlayer.load();
+            currentTitle.textContent = video.title;
+            currentDescription.textContent = video.description + ' - Haz clic en play para comenzar';
+            currentVideoIndex = 0;
+            document.querySelector('.video-item').classList.add('active');
+        }
+    </script>
+</body>
+</html>
