@@ -197,6 +197,11 @@
             height: 30px;
         }
 
+        .close-button:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
         .close-button:hover {
             color: #333;
         }
@@ -304,11 +309,11 @@
     </div>
 
     <!-- Modal para compartir -->
-    <div id="shareModal" class="modal">
+    <div id="shareModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔗 Compartir Video</h3>
-                <button class="close-button" id="closeModal">&times;</button>
+                <h3 id="modalTitle">🔗 Compartir Video</h3>
+                <button class="close-button" id="closeModal" aria-label="Cerrar modal">&times;</button>
             </div>
             
             <div class="share-section">
@@ -400,7 +405,8 @@
         // Función para abrir modal de compartir
         function openShareModal(index) {
             const video = videos[index];
-            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+            // Construcción más robusta de la URL base
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const videoUrl = baseUrl + video.src;
             
             // Link directo
@@ -417,34 +423,64 @@
                 `  Tu navegador no soporta el elemento de video.\n` +
                 `</video>`;
             
-            document.getElementById('shareModal').classList.add('active');
+            const modal = document.getElementById('shareModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
         }
 
         // Función para cerrar modal
         function closeShareModal() {
-            document.getElementById('shareModal').classList.remove('active');
+            const modal = document.getElementById('shareModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
         }
 
         // Función para copiar al portapapeles
         function copyToClipboard(elementId, button) {
             const element = document.getElementById(elementId);
             element.select();
-            element.setSelectionRange(0, 99999); // Para móviles
+            element.setSelectionRange(0, element.value.length);
             
-            navigator.clipboard.writeText(element.value).then(() => {
-                // Cambiar texto del botón temporalmente
-                const originalText = button.textContent;
-                button.textContent = '✓ Copiado!';
-                button.classList.add('copied');
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            }).catch(err => {
-                console.error('Error al copiar:', err);
+            // Usar Clipboard API con fallback
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(element.value).then(() => {
+                    showCopySuccess(button);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    // Intentar fallback
+                    fallbackCopy(element, button);
+                });
+            } else {
+                // Fallback para navegadores antiguos
+                fallbackCopy(element, button);
+            }
+        }
+
+        // Función de fallback para copiar usando execCommand
+        function fallbackCopy(element, button) {
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(button);
+                } else {
+                    alert('No se pudo copiar al portapapeles');
+                }
+            } catch (err) {
+                console.error('Error en fallback copy:', err);
                 alert('No se pudo copiar al portapapeles');
-            });
+            }
+        }
+
+        // Función para mostrar éxito al copiar
+        function showCopySuccess(button) {
+            const originalText = button.textContent;
+            button.textContent = '✓ Copiado!';
+            button.classList.add('copied');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
         }
 
         // Crear elementos de la lista de videos
