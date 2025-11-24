@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Videos Random</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .video-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: #000;
+            outline: none;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .info {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Player</h1>
+        <div class="video-grid" id="videoGrid"></div>
+        <div class="info">
+            <p>Reproducción automática de videos | Total: <span id="videoCount">0</span> videos</p>
+        </div>
+    </div>
+
+    <script>
+        // Lista de videos en la carpeta videos/
+        const videos = [
+            'VIDEO BH1.mp4',
+            'VIDEO BH2.mp4',
+            'VIDEO BV1.mp4',
+            'VIDEO BV2.mp4'
+        ];
+
+        const videoGrid = document.getElementById('videoGrid');
+        const videoCount = document.getElementById('videoCount');
+
+        // Actualizar contador
+        videoCount.textContent = videos.length;
+
+        // Crear tarjetas de video dinámicamente
+        videos.forEach((videoName, index) => {
+            const videoCard = document.createElement('div');
+            videoCard.className = 'video-card';
+
+            const title = document.createElement('div');
+            title.className = 'video-title';
+            title.textContent = videoName.replace('.mp4', '');
+
+            const video = document.createElement('video');
+            video.controls = true;
+            video.preload = 'metadata';
+            video.id = `video-${index}`;
+            
+            const source = document.createElement('source');
+            source.src = `videos/${videoName}`;
+            source.type = 'video/mp4';
+            
+            video.appendChild(source);
+
+            const controls = document.createElement('div');
+            controls.className = 'controls';
+
+            const playBtn = document.createElement('button');
+            playBtn.textContent = '▶ Reproducir';
+            playBtn.onclick = () => {
+                if (video.paused) {
+                    video.play();
+                    playBtn.textContent = '⏸ Pausar';
+                } else {
+                    video.pause();
+                    playBtn.textContent = '▶ Reproducir';
+                }
+            };
+
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = '⟲ Reiniciar';
+            restartBtn.onclick = () => {
+                video.currentTime = 0;
+                video.play();
+                playBtn.textContent = '⏸ Pausar';
+            };
+
+            // Actualizar botón cuando el video termina
+            video.addEventListener('ended', () => {
+                playBtn.textContent = '▶ Reproducir';
+            });
+
+            // Actualizar botón cuando el video se pausa/reproduce
+            video.addEventListener('play', () => {
+                playBtn.textContent = '⏸ Pausar';
+            });
+
+            video.addEventListener('pause', () => {
+                playBtn.textContent = '▶ Reproducir';
+            });
+
+            controls.appendChild(playBtn);
+            controls.appendChild(restartBtn);
+
+            videoCard.appendChild(title);
+            videoCard.appendChild(video);
+            videoCard.appendChild(controls);
+
+            videoGrid.appendChild(videoCard);
+        });
+
+        // Función para reproducir todos los videos
+        function playAllVideos() {
+            videos.forEach((_, index) => {
+                const video = document.getElementById(`video-${index}`);
+                video.play();
+            });
+        }
+
+        // Función para pausar todos los videos
+        function pauseAllVideos() {
+            videos.forEach((_, index) => {
+                const video = document.getElementById(`video-${index}`);
+                video.pause();
+            });
+        }
+
+        console.log(`${videos.length} videos cargados correctamente`);
+    </script>
+</body>
+</html>
